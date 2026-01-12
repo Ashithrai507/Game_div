@@ -1,7 +1,8 @@
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import WindowProperties
-from ui.menu import MainMenu
-from ui.join_menu import JoinMenu
+from client.ui.menu import MainMenu
+from client.ui.join_menu import JoinMenu
+
 
 class GameApp(ShowBase):
     def __init__(self):
