@@ -51,8 +51,9 @@ class MainMenu:
         # NEXT: start server + lobby
 
     def on_join(self):
-        print("Join Game clicked")
-        # NEXT: show LAN game list
+        self.frame.destroy()
+        self.app.show_join_menu()
+
 
     def on_quit(self):
         self.app.userExit()
