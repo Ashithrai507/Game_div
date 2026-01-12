@@ -71,8 +71,13 @@ class JoinMenu:
         return task.cont
 
     def select_game(self, game):
-        print("Selected game:", game)
-        # NEXT: password popup + TCP connect
+        from client.ui.password_popup import PasswordPopup
+        PasswordPopup(self.app, game, self.join_success)
+
+    def join_success(self):
+        print("Joined game successfully")
+        # NEXT: show lobby
+
 
     def go_back(self):
         self.discovery.stop()

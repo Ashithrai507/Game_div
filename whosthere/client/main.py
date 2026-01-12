@@ -2,7 +2,7 @@ from direct.showbase.ShowBase import ShowBase
 from panda3d.core import WindowProperties
 from client.ui.menu import MainMenu
 from client.ui.join_menu import JoinMenu
-
+from client.ui.lobby_menu import LobbyMenu
 
 class GameApp(ShowBase):
     def __init__(self):
@@ -17,6 +17,10 @@ class GameApp(ShowBase):
         props.setSize(1280, 720)
         self.win.requestProperties(props)
 
+    def show_lobby(self, is_host=False):
+        self.clear_ui()
+        self.lobby = LobbyMenu(self, is_host)
+        
     def show_main_menu(self):
         self.clear_ui()
         self.menu = MainMenu(self)
