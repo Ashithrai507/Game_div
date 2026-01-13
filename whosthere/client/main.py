@@ -1,66 +1,107 @@
+import threading
+import socket
+
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import WindowProperties
-import socket
+
+# UI
 from client.ui.menu import MainMenu
 from client.ui.join_menu import JoinMenu
 from client.ui.lobby_menu import LobbyMenu
-from client.network.lobby_client import LobbyClient
-import threading
+
+# Server & Networking
 from server.tcp_server import GameServer
 from server.discovery_server import DiscoveryBroadcaster
-from client.ui.lobby_menu import LobbyMenu
+from client.network.tcp_client import try_join
+from client.network.lobby_client import LobbyClient
+
 
 class GameApp(ShowBase):
     def __init__(self):
         ShowBase.__init__(self)
+
         self.disableMouse()
         self.set_window_properties()
+
+        self.menu = None
+        self.join_menu = None
+        self.lobby = None
+
         self.show_main_menu()
 
+    # -----------------------------
+    # Window setup
+    # -----------------------------
     def set_window_properties(self):
         props = WindowProperties()
         props.setTitle("Multiplayer FPS")
         props.setSize(1280, 720)
         self.win.requestProperties(props)
 
-    def show_lobby(self, sock):
-        self.clear_ui()
-        self.lobby = LobbyMenu(self)
-        LobbyClient(sock, self.lobby.update_players)
+    # -----------------------------
+    # UI State Management
+    # -----------------------------
+    def clear_ui(self):
+        if self.menu:
+            self.menu.frame.destroy()
+            self.menu = None
 
-        
+        if self.join_menu:
+            self.join_menu.frame.destroy()
+            self.join_menu = None
+
+        if self.lobby:
+            self.lobby.frame.destroy()
+            self.lobby = None
+
     def show_main_menu(self):
         self.clear_ui()
         self.menu = MainMenu(self)
-        
+
+    def show_join_menu(self):
+        self.clear_ui()
+        self.join_menu = JoinMenu(self)
+
+    def show_lobby(self, sock, is_host=False):
+        self.clear_ui()
+        self.lobby = LobbyMenu(self, is_host=is_host)
+
+        # Listen for real lobby updates from server
+        LobbyClient(sock, self.lobby.update_players)
+
+    # -----------------------------
+    # HOST GAME FLOW
+    # -----------------------------
     def start_host(self, password):
+        """
+        Called after host enters numeric password
+        """
+
+        # 1️⃣ Start TCP server
         self.server = GameServer(password)
         self.server.start()
 
+        # 2️⃣ Start LAN broadcast
         self.broadcaster = DiscoveryBroadcaster("Ashith's Game")
         threading.Thread(
             target=self.broadcaster.broadcast_loop,
             daemon=True
         ).start()
 
+        # 3️⃣ Host connects to its OWN server via TCP
         hostname = socket.gethostname()
+        sock = try_join("127.0.0.1", password, hostname)
 
-        self.clear_ui()
-        self.lobby = LobbyMenu(self, is_host=True)
-        self.lobby.update_players([
-            {"name": hostname, "host": True}
-        ])
+        if not sock:
+            print("Host failed to join its own server")
+            return
+
+        # 4️⃣ Enter lobby (host = true)
+        self.show_lobby(sock, is_host=True)
 
 
-    def show_join_menu(self):
-        self.clear_ui()
-        self.join_menu = JoinMenu(self)
-
-    def clear_ui(self):
-        if hasattr(self, "menu"):
-            self.menu.frame.destroy()
-        if hasattr(self, "join_menu"):
-            self.join_menu.frame.destroy()
-
+# -----------------------------
+# Run App
+# -----------------------------
 app = GameApp()
 app.run()
