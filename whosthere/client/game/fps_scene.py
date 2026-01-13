@@ -1,5 +1,6 @@
-from panda3d.core import Vec3, CardMaker
+from panda3d.core import Vec3, CardMaker, WindowProperties
 from direct.showbase.DirectObject import DirectObject
+from math import sin, cos, radians
 
 class FPSScene(DirectObject):
     def __init__(self, app):
@@ -11,19 +12,26 @@ class FPSScene(DirectObject):
         # --------------------
         self.speed = 6.0
         self.player_height = 1.8
+        self.mouse_sensitivity = 0.15
 
-        # --------------------
-        # Setup world
-        # --------------------
-        self.setup_world()
-        self.setup_camera()
+        # Rotation
+        self.yaw = 0.0
+        self.pitch = 0.0
+        self.max_pitch = 85
 
         # Input
-        self.keys = {"w": False, "s": False}
-        self.accept("w", self.set_key, ["w", True])
-        self.accept("w-up", self.set_key, ["w", False])
-        self.accept("s", self.set_key, ["s", True])
-        self.accept("s-up", self.set_key, ["s", False])
+        self.keys = {
+            "w": False,
+            "s": False,
+            "a": False,
+            "d": False
+        }
+
+        # Setup
+        self.setup_world()
+        self.setup_camera()
+        self.setup_mouse()
+        self.setup_keys()
 
         # Update loop
         self.app.taskMgr.add(self.update, "fps-update")
@@ -40,7 +48,7 @@ class FPSScene(DirectObject):
         self.ground.setPos(0, 10, 0)
         self.ground.setColor(0.15, 0.15, 0.15, 1)
 
-        # Reference cube (so movement is obvious)
+        # Reference cube
         cube_cm = CardMaker("cube")
         cube_cm.setFrame(-0.5, 0.5, -0.5, 0.5)
         self.cube = self.app.render.attachNewNode(cube_cm.generate())
@@ -53,10 +61,34 @@ class FPSScene(DirectObject):
     def setup_camera(self):
         self.app.camera.reparentTo(self.app.render)
         self.app.camera.setPos(0, 0, self.player_height)
+        self.app.camera.setHpr(0, 0, 0)
 
     # --------------------
-    # Input
+    # Mouse setup
     # --------------------
+    def setup_mouse(self):
+        props = WindowProperties()
+        props.setCursorHidden(True)
+        self.app.win.requestProperties(props)
+
+        self.center_mouse()
+
+    def center_mouse(self):
+        if self.app.win:
+            self.app.win.movePointer(
+                0,
+                self.app.win.getXSize() // 2,
+                self.app.win.getYSize() // 2
+            )
+
+    # --------------------
+    # Keyboard
+    # --------------------
+    def setup_keys(self):
+        for key in self.keys:
+            self.accept(key, self.set_key, [key, True])
+            self.accept(f"{key}-up", self.set_key, [key, False])
+
     def set_key(self, key, value):
         self.keys[key] = value
 
@@ -66,13 +98,59 @@ class FPSScene(DirectObject):
     def update(self, task):
         dt = globalClock.getDt()
 
-        if self.keys["w"]:
-            self.app.camera.setY(
-                self.app.camera, self.speed * dt
-            )
-        if self.keys["s"]:
-            self.app.camera.setY(
-                self.app.camera, -self.speed * dt
-            )
+        self.update_mouse_look()
+        self.update_movement(dt)
 
         return task.cont
+
+    # --------------------
+    # Mouse look
+    # --------------------
+    def update_mouse_look(self):
+        if not self.app.mouseWatcherNode.hasMouse():
+            return
+
+        md = self.app.win.getPointer(0)
+
+        cx = self.app.win.getXSize() // 2
+        cy = self.app.win.getYSize() // 2
+
+        dx = md.getX() - cx
+        dy = md.getY() - cy
+
+        # Apply sensitivity
+        self.yaw -= dx * self.mouse_sensitivity
+        self.pitch -= dy * self.mouse_sensitivity
+
+        # Clamp pitch
+        self.pitch = max(-self.max_pitch, min(self.max_pitch, self.pitch))
+
+        # Apply rotation
+        self.app.camera.setHpr(self.yaw, self.pitch, 0)
+
+        # Recenter mouse
+        self.center_mouse()
+
+    # --------------------
+    # Movement
+    # --------------------
+    def update_movement(self, dt):
+        direction = Vec3(0, 0, 0)
+
+        if self.keys["w"]:
+            direction.y += 1
+        if self.keys["s"]:
+            direction.y -= 1
+        if self.keys["a"]:
+            direction.x -= 1
+        if self.keys["d"]:
+            direction.x += 1
+
+        if direction.lengthSquared() > 0:
+            direction.normalize()
+
+            # Move relative to camera direction
+            self.app.camera.setPos(
+                self.app.camera,
+                direction * self.speed * dt
+            )
