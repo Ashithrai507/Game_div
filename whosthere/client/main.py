@@ -1,5 +1,6 @@
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import WindowProperties
+import socket
 from client.ui.menu import MainMenu
 from client.ui.join_menu import JoinMenu
 from client.ui.lobby_menu import LobbyMenu
@@ -31,22 +32,25 @@ class GameApp(ShowBase):
     def show_main_menu(self):
         self.clear_ui()
         self.menu = MainMenu(self)
+        
     def start_host(self, password):
-        # Start TCP server
         self.server = GameServer(password)
         self.server.start()
 
-        # Start LAN broadcast
         self.broadcaster = DiscoveryBroadcaster("Ashith's Game")
         threading.Thread(
             target=self.broadcaster.broadcast_loop,
             daemon=True
         ).start()
 
-    # Host enters lobby as Player1
+        hostname = socket.gethostname()
+
         self.clear_ui()
         self.lobby = LobbyMenu(self, is_host=True)
-        self.lobby.update_players(["HOST"])
+        self.lobby.update_players([
+            {"name": hostname, "host": True}
+        ])
+
 
     def show_join_menu(self):
         self.clear_ui()

@@ -6,7 +6,7 @@ from shared.protocol import (
 class GameServer:
     def __init__(self, password):
         self.password = password
-        self.players = []          # list of player names
+        self.players = []   # list of dicts: {name, is_host}
         self.clients = []          # list of sockets
         self.lock = threading.Lock()
 
@@ -37,23 +37,25 @@ class GameServer:
                     client.close()
                     return
 
-                # ACCEPT JOIN
-                name = msg.get("name", f"Player{len(self.players)+1}")
+                name = msg.get("name", "Unknown")
 
                 with self.lock:
-                    self.players.append(name)
+                    is_host = len(self.players) == 0
+                    self.players.append({
+                        "name": name,
+                        "host": is_host
+                    })
                     self.clients.append(client)
 
                 client.send(json.dumps({"type": MSG_ACCEPT}).encode())
                 self.broadcast_lobby()
 
-                # Keep connection alive
                 while True:
                     if not client.recv(1024):
                         break
-
         finally:
             self.remove_client(client)
+
 
     def remove_client(self, client):
         with self.lock:
@@ -74,3 +76,4 @@ class GameServer:
                 c.send(msg)
             except:
                 pass
+

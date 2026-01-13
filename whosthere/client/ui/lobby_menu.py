@@ -43,15 +43,20 @@ class LobbyMenu:
 
         y = 0.25
         for p in players:
+            name = p["name"]
+            if p.get("host"):
+                name += " (Host)"
+
             lbl = DirectLabel(
-                text=p,
+                text=name,
                 scale=0.06,
                 pos=(0, 0, y),
                 parent=self.player_frame,
                 text_align=TextNode.ACenter
             )
             self.labels.append(lbl)
-            y -= 0.12
+            y -= 0.12 #updated
+
 
     def start_game(self):
         print("Host started the game")

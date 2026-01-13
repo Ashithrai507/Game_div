@@ -1,9 +1,11 @@
 import socket, json
 from shared.protocol import GAME_PORT, MSG_JOIN, MSG_ACCEPT
 
-def try_join(ip, password, name):
+def try_join(ip, password):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sock.connect((ip, GAME_PORT))
+
+    name = socket.gethostname()
 
     sock.send(json.dumps({
         "type": MSG_JOIN,
