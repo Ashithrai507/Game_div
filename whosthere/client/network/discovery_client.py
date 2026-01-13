@@ -14,7 +14,10 @@ class DiscoveryClient:
 
     def listen(self):
         while self.running:
-            data, addr = self.sock.recvfrom(1024)
+            try:
+                data, addr = self.sock.recvfrom(1024)
+            except OSError:
+                break
             try:
                 msg = json.loads(data.decode())
             except:

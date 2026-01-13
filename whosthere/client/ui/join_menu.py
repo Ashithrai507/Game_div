@@ -38,7 +38,9 @@ class JoinMenu:
         self.discovery.start()
 
         # UI update task
-        self.app.taskMgr.add(self.update_ui_task, "update-join-ui")
+        self.update_task = self.app.taskMgr.add(
+        self.update_ui_task, "update-join-ui")
+
 
     def on_game_found(self, game):
         """
@@ -71,8 +73,12 @@ class JoinMenu:
         return task.cont
 
     def select_game(self, game):
+        self.discovery.stop()
+        self.app.taskMgr.remove(self.update_task)
+
         from client.ui.password_popup import PasswordPopup
         PasswordPopup(self.app, game, self.join_success)
+
 
     def join_success(self):
         print("Joined game successfully")
@@ -81,5 +87,7 @@ class JoinMenu:
 
     def go_back(self):
         self.discovery.stop()
+        self.app.taskMgr.remove(self.update_task)
         self.frame.destroy()
         self.app.show_main_menu()
+
