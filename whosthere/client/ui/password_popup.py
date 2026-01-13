@@ -38,9 +38,12 @@ class PasswordPopup:
 
     def submit(self):
         from client.network.tcp_client import try_join
-        ok = try_join(self.game["ip"], self.entry.get())
+        sock = try_join(self.game["ip"], self.entry.get(), "Player")
 
-        if ok:
+        if sock:
             self.frame.destroy()
-            self.app.show_lobby(is_host=False)
+            self.app.show_lobby(sock)
+        else:
+            self.entry.set("")
+
 

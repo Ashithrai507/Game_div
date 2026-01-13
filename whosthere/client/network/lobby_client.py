@@ -1,12 +1,10 @@
-import json
-import threading
+import json, threading
 from shared.protocol import MSG_LOBBY_STATE, MSG_START_GAME
 
 class LobbyClient:
-    def __init__(self, sock, on_update, on_start):
+    def __init__(self, sock, on_update):
         self.sock = sock
         self.on_update = on_update
-        self.on_start = on_start
         threading.Thread(target=self.listen, daemon=True).start()
 
     def listen(self):
@@ -16,9 +14,5 @@ class LobbyClient:
                 break
 
             msg = json.loads(data.decode())
-
             if msg["type"] == MSG_LOBBY_STATE:
                 self.on_update(msg["players"])
-
-            elif msg["type"] == MSG_START_GAME:
-                self.on_start()

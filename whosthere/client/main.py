@@ -3,6 +3,7 @@ from panda3d.core import WindowProperties
 from client.ui.menu import MainMenu
 from client.ui.join_menu import JoinMenu
 from client.ui.lobby_menu import LobbyMenu
+from client.network.lobby_client import LobbyClient
 
 class GameApp(ShowBase):
     def __init__(self):
@@ -17,9 +18,11 @@ class GameApp(ShowBase):
         props.setSize(1280, 720)
         self.win.requestProperties(props)
 
-    def show_lobby(self, is_host=False):
+    def show_lobby(self, sock):
         self.clear_ui()
-        self.lobby = LobbyMenu(self, is_host)
+        self.lobby = LobbyMenu(self)
+        LobbyClient(sock, self.lobby.update_players)
+
         
     def show_main_menu(self):
         self.clear_ui()
