@@ -47,8 +47,9 @@ class MainMenu:
         )
 
     def on_host(self):
-        print("Host Game clicked")
-        # NEXT: start server + lobby
+        from client.ui.host_popup import HostPopup
+        HostPopup(self.app)
+
 
     def on_join(self):
         self.frame.destroy()
