@@ -59,5 +59,6 @@ class LobbyMenu:
 
 
     def start_game(self):
-        print("Host started the game")
-        # NEXT: notify server
+    # Notify server (host only)
+        self.app.server.start_game()
+

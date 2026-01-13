@@ -15,6 +15,8 @@ from server.discovery_server import DiscoveryBroadcaster
 from client.network.tcp_client import try_join
 from client.network.lobby_client import LobbyClient
 
+from client.ui.countdown import Countdown
+from client.game.fps_scene import FPSScene
 
 class GameApp(ShowBase):
     def __init__(self):
@@ -66,9 +68,18 @@ class GameApp(ShowBase):
         self.clear_ui()
         self.lobby = LobbyMenu(self, is_host=is_host)
 
-        # Listen for real lobby updates from server
-        LobbyClient(sock, self.lobby.update_players)
+        LobbyClient(
+            sock,
+            self.lobby.update_players,
+            self.start_countdown
+        )
 
+    def start_countdown(self):
+        self.clear_ui()
+        Countdown(self, self.start_game_scene)
+
+    def start_game_scene(self):
+        FPSScene(self)
     # -----------------------------
     # HOST GAME FLOW
     # -----------------------------

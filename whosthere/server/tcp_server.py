@@ -1,6 +1,6 @@
 import socket, threading, json
 from shared.protocol import (
-    GAME_PORT, MSG_JOIN, MSG_ACCEPT, MSG_REJECT, MSG_LOBBY_STATE
+    GAME_PORT, MSG_JOIN, MSG_ACCEPT, MSG_REJECT, MSG_LOBBY_STATE, MSG_START_GAME
 )
 
 class GameServer:
@@ -17,6 +17,17 @@ class GameServer:
     def start(self):
         threading.Thread(target=self.accept_loop, daemon=True).start()
 
+    def start_game(self):
+        msg = json.dumps({
+            "type": MSG_START_GAME
+        }).encode()
+
+        for c in self.clients:
+            try:
+                c.send(msg)
+            except:
+                pass
+            
     def accept_loop(self):
         while True:
             client, addr = self.sock.accept()
