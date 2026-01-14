@@ -1,8 +1,11 @@
+import json
 from panda3d.core import (
-    Vec3, CardMaker, WindowProperties, CollisionNode,
-    CollisionRay, CollisionTraverser, CollisionHandlerQueue
+    Vec3, CardMaker, WindowProperties,
+    CollisionNode, CollisionRay, CollisionPlane, Plane,
+    CollisionTraverser, CollisionHandlerQueue, BitMask32
 )
 from direct.showbase.DirectObject import DirectObject
+from panda3d.core import BitMask32
 
 class FPSScene(DirectObject):
     def __init__(self, app):
@@ -14,8 +17,8 @@ class FPSScene(DirectObject):
         # --------------------
         self.speed = 6.0
         self.player_height = 1.8
-        self.gravity = 20.0
-        self.jump_velocity = 0.0
+        self.gravity = 25.0
+        self.jump_strength = 9.0
         self.mouse_sensitivity = 0.15
 
         # Rotation
@@ -23,10 +26,10 @@ class FPSScene(DirectObject):
         self.pitch = 0.0
         self.max_pitch = 85
 
-        # States
-        self.cursor_locked = True
-        self.on_ground = False
+        # State
         self.vertical_velocity = 0.0
+        self.on_ground = False
+        self.cursor_locked = True
 
         # Input
         self.keys = {"w": False, "s": False, "a": False, "d": False}
@@ -42,25 +45,34 @@ class FPSScene(DirectObject):
         self.app.taskMgr.add(self.update, "fps-update")
 
     # ------------------------------------------------
-    # World
+    # WORLD
     # ------------------------------------------------
     def setup_world(self):
-        cm = CardMaker("ground")
-        cm.setFrame(-50, 50, -50, 50)
-        self.ground = self.app.render.attachNewNode(cm.generate())
-        self.ground.setHpr(0, -90, 0)
+        # Load ground model
+        self.ground = self.app.loader.loadModel("maps/ground.glb")
+        self.ground.reparentTo(self.app.render)
         self.ground.setPos(0, 0, 0)
-        self.ground.setColor(0.15, 0.15, 0.15, 1)
+        self.ground.setScale(1)
 
-        # Visual reference
+        # Enable collision on the model
+        self.ground.node().setIntoCollideMask(BitMask32.bit(1))
+            # Optional reference cube (keep for debugging)
+
         cube = CardMaker("cube")
         cube.setFrame(-0.5, 0.5, -0.5, 0.5)
         self.ref = self.app.render.attachNewNode(cube.generate())
-        self.ref.setPos(2, 10, 1)
+        self.ref.setPos(2, 8, 1)
+        self.ref.setColor(1, 0, 0, 1)
+        
+        # Reference cube
+        cube = CardMaker("cube")
+        cube.setFrame(-0.5, 0.5, -0.5, 0.5)
+        self.ref = self.app.render.attachNewNode(cube.generate())
+        self.ref.setPos(3, 12, 1)
         self.ref.setColor(1, 0, 0, 1)
 
     # ------------------------------------------------
-    # Camera
+    # CAMERA
     # ------------------------------------------------
     def setup_camera(self):
         self.app.camera.reparentTo(self.app.render)
@@ -68,21 +80,39 @@ class FPSScene(DirectObject):
         self.app.camera.setHpr(0, 0, 0)
 
     # ------------------------------------------------
-    # Collision (Ground)
+    # COLLISION
     # ------------------------------------------------
     def setup_collision(self):
         self.traverser = CollisionTraverser()
         self.handler = CollisionHandlerQueue()
 
-        ray = CollisionRay(0, 0, 0, 0, 0, -1)
-        cnode = CollisionNode("groundRay")
+        # Ray starts ABOVE feet and goes down
+        ray = CollisionRay(0, 0, 0.2, 0, 0, -1)
+        cnode = CollisionNode("playerRay")
         cnode.addSolid(ray)
-        self.ray_np = self.app.camera.attachNewNode(cnode)
+        cnode.setFromCollideMask(BitMask32.bit(1))
+        cnode.setIntoCollideMask(BitMask32.allOff())
 
+        self.ray_np = self.app.camera.attachNewNode(cnode)
         self.traverser.addCollider(self.ray_np, self.handler)
 
     # ------------------------------------------------
-    # Cursor control
+    # INPUT
+    # ------------------------------------------------
+    def setup_keys(self):
+        for k in self.keys:
+            self.accept(k, self.set_key, [k, True])
+            self.accept(f"{k}-up", self.set_key, [k, False])
+
+        self.accept("space", self.jump)
+        self.accept("escape", self.unlock_cursor)
+        self.accept("enter", self.lock_cursor)
+
+    def set_key(self, key, value):
+        self.keys[key] = value
+
+    # ------------------------------------------------
+    # CURSOR
     # ------------------------------------------------
     def lock_cursor(self):
         props = WindowProperties()
@@ -98,43 +128,27 @@ class FPSScene(DirectObject):
         self.cursor_locked = False
 
     def center_mouse(self):
-        if self.app.win:
-            self.app.win.movePointer(
-                0,
-                self.app.win.getXSize() // 2,
-                self.app.win.getYSize() // 2
-            )
+        self.app.win.movePointer(
+            0,
+            self.app.win.getXSize() // 2,
+            self.app.win.getYSize() // 2
+        )
 
     # ------------------------------------------------
-    # Input
-    # ------------------------------------------------
-    def setup_keys(self):
-        for key in self.keys:
-            self.accept(key, self.set_key, [key, True])
-            self.accept(f"{key}-up", self.set_key, [key, False])
-
-        self.accept("escape", self.unlock_cursor)
-        self.accept("enter", self.lock_cursor)
-
-    def set_key(self, key, value):
-        self.keys[key] = value
-
-    # ------------------------------------------------
-    # Update loop
+    # UPDATE LOOP
     # ------------------------------------------------
     def update(self, task):
         dt = globalClock.getDt()
 
         if self.cursor_locked:
             self.update_mouse_look()
+            self.update_movement(dt)
 
-        self.update_movement(dt)
         self.apply_gravity(dt)
-
         return task.cont
 
     # ------------------------------------------------
-    # Mouse look
+    # MOUSE LOOK
     # ------------------------------------------------
     def update_mouse_look(self):
         if not self.app.mouseWatcherNode.hasMouse():
@@ -155,7 +169,7 @@ class FPSScene(DirectObject):
         self.center_mouse()
 
     # ------------------------------------------------
-    # Movement
+    # MOVEMENT
     # ------------------------------------------------
     def update_movement(self, dt):
         direction = Vec3(0, 0, 0)
@@ -171,13 +185,17 @@ class FPSScene(DirectObject):
 
         if direction.lengthSquared() > 0:
             direction.normalize()
+
+            # Rotate movement vector by camera orientation (CORRECT WAY)
+            move_vec = self.app.camera.getQuat().xform(direction)
+
             self.app.camera.setPos(
                 self.app.camera,
-                self.app.camera.getQuat() * direction * self.speed * dt
+                move_vec * self.speed * dt
             )
 
     # ------------------------------------------------
-    # Gravity & ground collision
+    # GRAVITY + GROUND COLLISION
     # ------------------------------------------------
     def apply_gravity(self, dt):
         self.traverser.traverse(self.app.render)
@@ -186,11 +204,9 @@ class FPSScene(DirectObject):
             self.handler.sortEntries()
             hit = self.handler.getEntry(0)
             ground_z = hit.getSurfacePoint(self.app.render).getZ()
-
-            cam_z = self.app.camera.getZ()
             desired_z = ground_z + self.player_height
 
-            if cam_z <= desired_z:
+            if self.app.camera.getZ() <= desired_z:
                 self.app.camera.setZ(desired_z)
                 self.vertical_velocity = 0
                 self.on_ground = True
@@ -201,3 +217,11 @@ class FPSScene(DirectObject):
         self.app.camera.setZ(
             self.app.camera.getZ() + self.vertical_velocity * dt
         )
+
+    # ------------------------------------------------
+    # JUMP
+    # ------------------------------------------------
+    def jump(self):
+        if self.on_ground:
+            self.vertical_velocity = self.jump_strength
+            self.on_ground = False

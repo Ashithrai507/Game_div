@@ -1,6 +1,7 @@
 import threading
 import socket
 
+from panda3d.core import getModelPath
 from direct.showbase.ShowBase import ShowBase
 from panda3d.core import WindowProperties
 
@@ -20,6 +21,7 @@ from client.game.fps_scene import FPSScene
 
 class GameApp(ShowBase):
     def __init__(self):
+        getModelPath().appendDirectory("client/assets")
         ShowBase.__init__(self)
 
         self.disableMouse()
