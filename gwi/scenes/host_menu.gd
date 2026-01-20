@@ -1,0 +1,14 @@
+extends Control
+
+@onready var room_input = $VBoxContainer/RoomNameInput
+@onready var password_input = $VBoxContainer/PasswordInput
+
+func _ready():
+	print("HOST MENU READY")
+
+func on_create_pressed():
+	Network.host_game(room_input.text, password_input.text)
+
+
+func on_back_pressed():
+	get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")

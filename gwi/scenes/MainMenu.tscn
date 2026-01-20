@@ -1,0 +1,35 @@
+[gd_scene load_steps=2 format=3 uid="uid://ceqtl6hq85xj3"]
+
+[ext_resource type="Script" uid="uid://bbif1vft4tyf1" path="res://scenes/main_menu.gd" id="1_yqorp"]
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_yqorp")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 533.0
+offset_top = 229.0
+offset_right = 627.0
+offset_bottom = 330.0
+
+[node name="QuitButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Quit"
+
+[node name="HostButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Host Game"
+
+[node name="JoinButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+text = "Join Game"
+
+[connection signal="pressed" from="VBoxContainer/QuitButton" to="." method="quit_game"]
+[connection signal="pressed" from="VBoxContainer/HostButton" to="." method="on_host_pressed"]
+[connection signal="pressed" from="VBoxContainer/JoinButton" to="." method="on_join_pressed"]
