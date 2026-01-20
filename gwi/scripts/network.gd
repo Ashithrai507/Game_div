@@ -11,8 +11,11 @@ var room_password := ""
 var peer: ENetMultiplayerPeer
 
 # LAN discovery
-var udp := PacketPeerUDP.new()
+var udp_broadcast := PacketPeerUDP.new()
+var udp_listen := PacketPeerUDP.new()
+
 var discovered_rooms := {}
+
 
 func _ready():
 	print("NETWORK AUTOLOAD READY")
@@ -31,8 +34,8 @@ func host_game(room: String, password: String):
 	_start_broadcast()
 
 func _start_broadcast():
-	udp.set_broadcast_enabled(true)
-	udp.set_dest_address("255.255.255.255", DISCOVERY_PORT)
+	udp_broadcast.set_broadcast_enabled(true)
+	udp_broadcast.set_dest_address("255.255.255.255", DISCOVERY_PORT)
 
 	var timer := Timer.new()
 	timer.wait_time = 1.0
@@ -46,7 +49,10 @@ func _broadcast_room():
 		GAME_PORT,
 		multiplayer.get_peers().size() + 1
 	]
-	udp.put_packet(msg.to_utf8_buffer())
+	udp_broadcast.put_packet(msg.to_utf8_buffer())
+	print("📡 BROADCAST:", msg)
+
+
 
 # ================= JOIN =================
 func join_game(ip: String, password: String):
