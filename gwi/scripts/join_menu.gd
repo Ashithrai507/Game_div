@@ -25,10 +25,26 @@ func _handle_room_packet(data: String):
 	var room_name = parts[0]
 	var port = parts[1]
 	var players = parts[2]
+	var ip = Network.udp.get_packet_ip()
 
 	if not Network.discovered_rooms.has(room_name):
 		Network.discovered_rooms[room_name] = {
-			"ip": Network.udp.get_packet_ip(),
+			"ip": ip,
 			"port": port
 		}
 		room_list.add_item("%s (%s players)" % [room_name, players])
+
+func on_join_pressed():
+	var selected = room_list.get_selected_items()
+	if selected.is_empty():
+		return
+
+	var text = room_list.get_item_text(selected[0])
+	var room_name = text.split(" ")[0]
+	var info = Network.discovered_rooms[room_name]
+
+	Network.join_game(info.ip, password_input.text)
+	get_tree().change_scene_to_file("res://scenes/Lobby.tscn")
+
+func on_back_pressed():
+	get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")

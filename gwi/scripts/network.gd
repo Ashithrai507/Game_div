@@ -16,7 +16,8 @@ var discovered_rooms := {}
 
 func _ready():
 	print("NETWORK AUTOLOAD READY")
-	
+
+# ================= HOST =================
 func host_game(room: String, password: String):
 	peer = ENetMultiplayerPeer.new()
 	peer.create_server(GAME_PORT, MAX_PLAYERS)
@@ -47,6 +48,7 @@ func _broadcast_room():
 	]
 	udp.put_packet(msg.to_utf8_buffer())
 
+# ================= JOIN =================
 func join_game(ip: String, password: String):
 	peer = ENetMultiplayerPeer.new()
 	peer.create_client(ip, GAME_PORT)
