@@ -9,7 +9,7 @@ func _ready():
 	_start_listening()
 
 func _start_listening():
-	var err = Network.udp_listen.bind(Network.DISCOVERY_PORT)
+	var err = Network.udp_listen.bind(Network.DISCOVERY_PORT, "*")
 	print("UDP bind result:", err)
 	Network.udp_listen.set_broadcast_enabled(true)
 

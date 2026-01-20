@@ -32,16 +32,29 @@ func host_game(room: String, password: String):
 
 	print("Hosting room:", room_name)
 	_start_broadcast()
+	
+func _get_subnet_broadcast_ip() -> String:
+	for ip in IP.get_local_addresses():
+		if ip.begins_with("192.168.") or ip.begins_with("10."):
+			var parts = ip.split(".")
+			return "%s.%s.%s.255" % [parts[0], parts[1], parts[2]]
+	return "255.255.255.255"
+
 
 func _start_broadcast():
 	udp_broadcast.set_broadcast_enabled(true)
-	udp_broadcast.set_dest_address("255.255.255.255", DISCOVERY_PORT)
+
+	var broadcast_ip = _get_subnet_broadcast_ip()
+	udp_broadcast.set_dest_address(broadcast_ip, DISCOVERY_PORT)
+
+	print("📡 Using broadcast IP:", broadcast_ip)
 
 	var timer := Timer.new()
 	timer.wait_time = 1.0
 	timer.autostart = true
 	timer.timeout.connect(_broadcast_room)
 	add_child(timer)
+
 
 func _broadcast_room():
 	var msg = "%s|%d|%d" % [
