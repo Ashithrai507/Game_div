@@ -2,6 +2,7 @@ extends Control
 
 @onready var player_list = $VBoxContainer/PlayerList
 @onready var start_button = $VBoxContainer/StartButton
+@onready var code_label = $VBoxContainer/RoomCodeLabel
 
 func _ready():
 	print("LOBBY READY")
@@ -11,6 +12,13 @@ func _ready():
 
 	_refresh_players()
 
+	# Show room code only for host
+	if Network.is_host:
+		code_label.text = "Room Code: " + Network.room_code
+	else:
+		code_label.hide()
+
+	# Only host can start the game
 	if not Network.is_host:
 		start_button.hide()
 
@@ -24,10 +32,10 @@ func _on_player_disconnected(id):
 
 func _refresh_players():
 	player_list.clear()
-	player_list.add_item("Player 1 (Host)")
+	player_list.add_item("Host")
 
 	for id in multiplayer.get_peers():
-		player_list.add_item("Player %d" % id)
+		player_list.add_item("Player " + str(id))
 
 func _on_start_pressed():
 	print("START GAME PRESSED")

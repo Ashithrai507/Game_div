@@ -15,6 +15,7 @@ script = ExtResource("1_5a4rc")
 layout_mode = 0
 offset_right = 1160.0
 offset_bottom = 654.0
+alignment = 1
 
 [node name="Title" type="Label" parent="VBoxContainer"]
 layout_mode = 2
@@ -33,9 +34,16 @@ alignment = 1
 secret = true
 secret_character = "x"
 
+[node name="RoomCodeLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "Room Code: 
+"
+horizontal_alignment = 1
+
 [node name="CreateButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
-text = "Create"
+text = "Create Room
+"
 
 [node name="BackButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
