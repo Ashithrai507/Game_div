@@ -19,17 +19,9 @@ layout_mode = 2
 text = "JOIN ROOM"
 horizontal_alignment = 1
 
-[node name="RoomList" type="ItemList" parent="VBoxContainer"]
+[node name="CodeInput" type="LineEdit" parent="VBoxContainer"]
 layout_mode = 2
-max_text_lines = 3
-auto_width = true
-auto_height = true
-max_columns = 4
-icon_scale = 2.0
-
-[node name="PasswordInput" type="LineEdit" parent="VBoxContainer"]
-layout_mode = 2
-placeholder_text = "Password"
+placeholder_text = "enter code"
 alignment = 1
 secret = true
 secret_character = "#"

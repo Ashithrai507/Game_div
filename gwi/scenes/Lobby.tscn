@@ -30,7 +30,8 @@ horizontal_alignment = 1
 
 [node name="PlayerList" type="ItemList" parent="VBoxContainer"]
 layout_mode = 2
-select_mode = 1
+auto_width = true
+auto_height = true
 
 [node name="StartButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2

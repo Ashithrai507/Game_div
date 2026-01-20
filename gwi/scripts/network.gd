@@ -31,19 +31,18 @@ func generate_room_code(length := 5) -> String:
 # =========================
 # HOST
 # =========================
-func host_game(room: String, password: String):
-	room_code = generate_room_code()
+func host_game(room: String):
 	room_name = room
-	room_password = password
+	room_code = generate_room_code()
 	is_host = true
-
-	print("ROOM CODE:", room_code)
 
 	peer = ENetMultiplayerPeer.new()
 	peer.create_server(GAME_PORT, MAX_PLAYERS)
 	multiplayer.multiplayer_peer = peer
 
 	udp.bind(CODE_PORT, "*")
+	print("ROOM CODE:", room_code)
+
 
 func _process(_delta):
 	if not is_host:

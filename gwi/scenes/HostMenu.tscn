@@ -27,19 +27,6 @@ layout_mode = 2
 placeholder_text = "Name"
 alignment = 1
 
-[node name="PasswordInput" type="LineEdit" parent="VBoxContainer"]
-layout_mode = 2
-placeholder_text = "Password"
-alignment = 1
-secret = true
-secret_character = "x"
-
-[node name="RoomCodeLabel" type="Label" parent="VBoxContainer"]
-layout_mode = 2
-text = "Room Code: 
-"
-horizontal_alignment = 1
-
 [node name="CreateButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
 text = "Create Room
