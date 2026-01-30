@@ -60,12 +60,12 @@ func _process(_delta):
 # =========================
 # JOIN
 # =========================
-func join_game(ip: String, password: String):
-	room_password = password
+func join_game(ip: String):
 	peer = ENetMultiplayerPeer.new()
 	peer.create_client(ip, GAME_PORT)
 	multiplayer.multiplayer_peer = peer
 	print("Joining host at", ip)
+
 
 func get_subnet_prefix() -> String:
 	for ip in IP.get_local_addresses():
